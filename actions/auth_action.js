@@ -1,5 +1,6 @@
 "use server";
 
+import { createAuthSession } from "@/lib/auth";
 import { hashUserPassword } from "@/lib/hash";
 import { createUser } from "@/user";
 import { redirect } from "next/navigation";
@@ -28,7 +29,9 @@ export async function signup(prevState, formData) {
   const hashedPassword = hashUserPassword(password);
   try {
     // store it in the db
-    createUser(email, hashedPassword);
+    const userId = await createUser(email, hashedPassword);
+    await createAuthSession(userId);
+    redirect("/training");
   } catch (error) {
     if (error.code === "SQLITE_CONSTRAINT_UNIQUE") {
       return {
@@ -39,7 +42,4 @@ export async function signup(prevState, formData) {
     }
     throw error;
   }
-  
-
-  redirect('/training')
 }
